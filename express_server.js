@@ -55,3 +55,8 @@ app.post("/urls", (req, res) => {
   console.log(urlDatabase);  // Log the POST request body to the console
   res.redirect(req.body.longURL);  // sends to a new page
 });
+
+app.post("/urls/:shortURL/delete", (req, res) => {
+  delete urlDatabase[req.params.shortURL];
+  res.redirect("/urls");
+});
