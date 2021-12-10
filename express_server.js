@@ -73,7 +73,12 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const templateVars = { display: users[req.cookies.user_id], urls: urlDatabase }; //Passing the user Object to the _header
-  res.render("urls_new", templateVars);
+  const onlyRegisteredUsers = "urls_new";
+  if(!users[req.cookies.user_id]){
+    res.redirect("/login")
+  } else {
+    res.render("urls_new", templateVars);
+  }
 });
 
 app.get("/u/:shortURL", (req, res) => {
