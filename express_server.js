@@ -29,6 +29,16 @@ function generateRandomString() {
   return Math.random().toString(36).substring(2, 8);
 };
 
+const findUserViaEmail = (email) => {
+  for(const userId in users) {
+    const user = users[userId];
+    if(user.email === email) {
+      return user;
+    }
+  }
+  return null;
+}
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -74,7 +84,15 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.post("/register", (req, res) => {
   let userID = generateRandomString();
+  if (!email || !password) {
+    return res.status(400).send("Please try again, your Email and Password fields can't be empty!");
+  }
+  const user = findUserViaEmail(email);
+  if(user) {
+    return res.status(400).send("Sorry, a user already exists with that Email, please use a different Email!")
+  }
   users[userID] = {id: userID, email: req.body.email, password: req.body.password};
+  res.cookie("user_id", UserID); 
   res.redirect("urls");
 });
 
