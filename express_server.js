@@ -48,6 +48,11 @@ app.get("/register", (req, res) => {
   res.render("registration", templateVars);
 }); 
 
+app.get("/login", (req, res) => {
+  const templateVars = { display: users[req.cookies.user_id], urls: urlDatabase };
+  res.render("login", templateVars);
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
@@ -84,6 +89,8 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.post("/register", (req, res) => {
   let userID = generateRandomString();
+  const email = req.body.email;
+  const password = req.body.password;
   if (!email || !password) {
     return res.status(400).send("Please try again, your Email and Password fields can't be empty!");
   }
@@ -92,7 +99,7 @@ app.post("/register", (req, res) => {
     return res.status(400).send("Sorry, a user already exists with that Email, please use a different Email!")
   }
   users[userID] = {id: userID, email: req.body.email, password: req.body.password};
-  res.cookie("user_id", UserID); 
+  res.cookie("user_id", userID); 
   res.redirect("urls");
 });
 
@@ -113,14 +120,25 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-app.post("/login", (req, res) => {
-  console.log(req.body)
-  res.cookie("username", req.body.username);
-  res.redirect("/urls");
+app.post('/login', (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  if (!email || !password) {
+    return res.status(400).send("Please try again, your Email and Password fields can't be empty!");
+  }
+  const user = findUserViaEmail(email);
+  if(!user){
+    return res.status(400).send("Please try again, a user with that Email does not exist!")
+  }
+  if(user.password !== password) {
+    return res.status(400).send('Inncorect! Password does not match')
+  }
+  res.cookie('user_id', user.id);
+  res.redirect('/urls')
 });
 
+
 app.post("/logout", (req, res) => {
-  console.log(req.cookies.username)
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
