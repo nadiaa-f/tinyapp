@@ -8,8 +8,14 @@ app.set("view engine", "ejs");
 app.use(cookieParser());
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+      longURL: "https://www.tsn.ca",
+      userID: "aJ48lW"
+  },
+  i3BoGr: {
+      longURL: "https://www.google.ca",
+      userID: "aJ48lW"
+  }
 };
 
 const users = { 
@@ -37,6 +43,15 @@ const findUserViaEmail = (email) => {
     }
   }
   return null;
+}
+const getUserURLs = (user,databaseobj) => {
+  let resultURL = {};
+ for(const shortURL in databaseobj){
+    if(databaseobj[shortURL].userID === user){
+     resultURL[shortURL] = databaseobj[shortURL];
+    }
+ }
+ return resultURL;
 }
 
 app.get("/", (req, res) => {
@@ -66,9 +81,12 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { display: users[req.cookies.user_id], urls: urlDatabase }; //Passing the user Object to the _header
-  console.log(templateVars);
-  res.render("urls_index", templateVars);
+  const templateVars = { display: users[req.cookies.user_id], urls: getUserURLs(req.cookies.user_id,urlDatabase) };
+  if(req.cookies.user_id) {
+    res.render("urls_index", templateVars);
+    } else {
+      res.send('Sorry to access urls you must <a href= "/login"> Login </a>  or  <a href= "/register"> Register </a>');
+    }
 });
 
 app.get("/urls/new", (req, res) => {
@@ -82,14 +100,28 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const shortURL = req.params.shortURL;
+  let longURL = urlDatabase[shortURL].longURL;
+
+  const first8 = longURL.substr(0,7);
+  const first9 = longURL.substr(0,8);
+
+
+  if(first8 === "http://" || first9 === "https://"){
   res.redirect(longURL);
+  } else {
+    longURL = "http://" + longURL;
+    res.redirect(longURL);
+  }
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { display: users[req.cookies.user_id], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]}; //Passing the user Object to the _header
-  console.log(templateVars);
+  if(req.cookies.user_id === urlDatabase[req.params.shortURL].userID) {
+  const templateVars = { display: users[req.cookies.user_id], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL};
   res.render("urls_show", templateVars);
+  } else {
+    res.send("Sorry, you cannot access urls that are not under your account!");
+  }
 });
 
 app.post("/register", (req, res) => {
@@ -110,18 +142,39 @@ app.post("/register", (req, res) => {
 
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
-  console.log(urlDatabase);  // Log the POST request body to the console
-  res.redirect(req.body.longURL);  // sends to a new page
+  let longURLs = req.body.longURL;
+  res.send(`Your shortlink: ${shortURL}, Your longlink: ${longURLs}, Your ID: ${req.cookies.user_id}`);
+  urlDatabase[shortURL] = {
+    longURL: longURLs,
+    userID: req.cookies.user_id
+  };
+
 });
 
 app.post("/urls/:shortURL", (req, res) => {
-  urlDatabase[req.params.shortURL] = req.body.longURL;
+  if(req.cookies.user_id === urlDatabase[req.params.shortURL].userID)
+  {
+  urlDatabase[req.params.shortURL].longURL = req.body.longURL;
+  urlDatabase[req.params.shortURL] = {
+    longURL: req.body.longURL,
+    userID: req.cookies.user_id
+  };
   res.redirect("/urls");
+  } else {
+    res.send("Sorry, you cannot edit urls that are not under your account!");
+  }
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
+  if(!urlDatabase[req.params.shortURL]){
+    res.send("URL doesn't exist");
+    return
+  }
+  if(req.cookies.user_id === urlDatabase[req.params.shortURL].userID) {
   delete urlDatabase[req.params.shortURL];
+} else {
+  res.send("Sorry, you cannot delete urls that are not under your account!");
+}
   res.redirect("/urls");
 });
 
