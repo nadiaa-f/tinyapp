@@ -149,7 +149,7 @@ app.post("/register", (req, res) => {
     return res.status(400).send("Sorry, a user already exists with that Email, please use a different Email!");
   }
   users[userID] = {id: userID, email: req.body.email, password: /* req.body.password*/ bcrypt.hashSync(req.body.password, 10)};
-  res.session.user_id = userID
+  req.session.user_id = userID
   res.redirect("/urls");
 });
 
