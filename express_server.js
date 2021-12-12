@@ -5,7 +5,7 @@ const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session');
-const {findUserViaEmail} = require("./helpers.js");
+const {findUserViaEmail, users} = require("./helpers");
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
@@ -30,7 +30,7 @@ const urlDatabase = {
   }
 };
 
-const users = {
+/*const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
@@ -41,7 +41,7 @@ const users = {
     email: "user2@example.com",
     password: bcrypt.hashSync("dishwasher-funk", 10)
   }
-};
+};*/
 
 function generateRandomString() {
   return Math.random().toString(36).substring(2, 8);
