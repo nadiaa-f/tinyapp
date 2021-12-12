@@ -1,23 +1,24 @@
 const express = require("express");
 const cookieParser = require('cookie-parser');
-const app = express();
-const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
-const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session');
+const bcrypt = require('bcryptjs');
 const {findUserViaEmail, users} = require("./helpers");
 
-app.use(bodyParser.urlencoded({extended: true}));
+//SERVER:
+const app = express();
+const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
-app.use(cookieParser());
 
+//MIDDLEWARES:
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
 app.use(cookieSession({
   name: 'session',
   keys: ["key1", "key2"],
-
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
-}))
+}));
 
 const urlDatabase = {
   b6UTxQ: {
@@ -29,19 +30,6 @@ const urlDatabase = {
     userID: "aJ48lW"
   }
 };
-
-/*const users = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: bcrypt.hashSync("purple-monkey-dinosaur", 10)
-  },
-  "user2RandomID": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: bcrypt.hashSync("dishwasher-funk", 10)
-  }
-};*/
 
 function generateRandomString() {
   return Math.random().toString(36).substring(2, 8);
@@ -57,8 +45,13 @@ const getUserURLs = (user,databaseobj) => {
   return resultURL;
 };
 
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
+
+//GETS:
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.send("<html><body>Hello <b>Welcome</b></body></html>\n");
 });
 
 app.get("/register", (req, res) => {
@@ -71,20 +64,11 @@ app.get("/login", (req, res) => {
   res.render("login", templateVars);
 });
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
-
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
 app.get("/urls", (req, res) => {
-console.log(users);
   const templateVars = { display: users[req.session.user_id], urls: getUserURLs(req.session.user_id,urlDatabase) };
   if (req.session.user_id) {
     res.render("urls_index", templateVars);
@@ -128,6 +112,7 @@ app.get("/urls/:id", (req, res) => {
   }
 });
 
+//POSTS:
 app.post("/register", (req, res) => {
   let userID = generateRandomString();
   const email = req.body.email;
@@ -140,7 +125,7 @@ app.post("/register", (req, res) => {
     return res.status(400).send("Sorry, a user already exists with that Email, please use a different Email!");
   }
   users[userID] = {id: userID, email: req.body.email, password: /* req.body.password*/ bcrypt.hashSync(req.body.password, 10)};
-  req.session.user_id = userID
+  req.session.user_id = userID;
   res.redirect("/urls");
 });
 
@@ -197,7 +182,6 @@ app.post('/login', (req, res) => {
   req.session.user_id = user.id;
   res.redirect('/urls');
 });
-
 
 app.post("/logout", (req, res) => {
   delete req.session.user_id;
