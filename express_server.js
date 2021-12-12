@@ -4,8 +4,8 @@ const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const bcrypt = require('bcryptjs');
-const cookieSession = require('cookie-session')
-
+const cookieSession = require('cookie-session');
+const {findUserViaEmail} = require("./helpers.js");
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
@@ -47,15 +47,6 @@ function generateRandomString() {
   return Math.random().toString(36).substring(2, 8);
 }
 
-const findUserViaEmail = (email) => {
-  for (const userId in users) {
-    const user = users[userId];
-    if (user.email === email) {
-      return user;
-    }
-  }
-  return null;
-};
 const getUserURLs = (user,databaseobj) => {
   let resultURL = {};
   for (const shortURL in databaseobj) {
