@@ -51,7 +51,12 @@ app.listen(PORT, () => {
 
 //GETS:
 app.get("/", (req, res) => {
-  res.send("<html><body>Hello <b>Welcome</b></body></html>\n");
+  const templateVarss = { display: users[req.session.user_ID], urls: urlDatabase };
+  if (!users[req.session.user_ID]) {
+    res.redirect("/login");
+  } else {
+    res.render("urls", templateVarss);
+  }
 });
 
 app.get("/register", (req, res) => {
@@ -64,10 +69,6 @@ app.get("/login", (req, res) => {
   res.render("login", templateVars);
 });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
 app.get("/urls", (req, res) => {
   const templateVars = { display: users[req.session.user_id], urls: getUserURLs(req.session.user_id,urlDatabase) };
   if (req.session.user_id) {
@@ -78,8 +79,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { display: users[req.session.user_id], urls: urlDatabase }; //Passing the user Object to the _header
-  const onlyRegisteredUsers = "urls_new";
+  const templateVars = { display: users[req.session.user_id], urls: urlDatabase }; 
   if (!users[req.session.user_id]) {
     res.redirect("/login");
   } else {
@@ -94,6 +94,9 @@ app.get("/u/:id", (req, res) => {
   const first8 = longURL.substr(0,7);
   const first9 = longURL.substr(0,8);
 
+  if (!urlDatabase[req.params.id] ){
+    res.send("Sorry, URL does not exist!");
+  }
 
   if (first8 === "http://" || first9 === "https://") {
     res.redirect(longURL);
@@ -132,12 +135,11 @@ app.post("/register", (req, res) => {
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   let longURLs = req.body.longURL;
-  res.send(`Your shortlink: ${shortURL}, Your longlink: ${longURLs}, Your ID: ${req.session.user_id}`);
   urlDatabase[shortURL] = {
     longURL: longURLs,
     userID: req.session.user_id
   };
-
+  res.redirect(`/urls/${shortURL}`);
 });
 
 app.post("/urls/:id", (req, res) => {
@@ -184,6 +186,6 @@ app.post('/login', (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  delete req.session.user_id;
+  req.session = null;
   res.redirect("/urls");
 });
