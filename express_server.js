@@ -88,14 +88,15 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/u/:id", (req, res) => {
   const shortURL = req.params.id;
+ 
+  if (!urlDatabase[req.params.id] ){
+    res.send("Sorry, this URL does not exist!");
+    return;
+  }
   let longURL = urlDatabase[shortURL].longURL;
 
   const first8 = longURL.substr(0,7);
   const first9 = longURL.substr(0,8);
-
-  if (!urlDatabase[req.params.id] ){
-    res.send("Sorry, this URL does not exist!");
-  }
 
   if (first8 === "http://" || first9 === "https://") {
     res.redirect(longURL);
@@ -103,11 +104,13 @@ app.get("/u/:id", (req, res) => {
     longURL = "http://" + longURL;
     res.redirect(longURL);
   }
+  
 });
 
 app.get("/urls/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
     res.send("Sorry, this URL does not exist!");
+    return;
   }
   if (req.session.user_id === urlDatabase[req.params.id].userID) {
     const templateVars = { display: users[req.session.user_id], shortURL: req.params.id, longURL: urlDatabase[req.params.id].longURL};
