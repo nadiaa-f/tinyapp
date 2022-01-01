@@ -51,11 +51,10 @@ app.listen(PORT, () => {
 
 //GETS:
 app.get("/", (req, res) => {
-  const templateVarss = { display: users[req.session.user_ID], urls: urlDatabase };
-  if (!users[req.session.user_ID]) {
-    res.redirect("/login");
+  if (req.session.user_id) {
+    res.redirect("/urls");
   } else {
-    res.render("urls", templateVarss);
+    res.redirect("/login");
   }
 });
 
@@ -95,7 +94,7 @@ app.get("/u/:id", (req, res) => {
   const first9 = longURL.substr(0,8);
 
   if (!urlDatabase[req.params.id] ){
-    res.send("Sorry, URL does not exist!");
+    res.send("Sorry, this URL does not exist!");
   }
 
   if (first8 === "http://" || first9 === "https://") {
@@ -107,6 +106,9 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    res.send("Sorry, this URL does not exist!");
+  }
   if (req.session.user_id === urlDatabase[req.params.id].userID) {
     const templateVars = { display: users[req.session.user_id], shortURL: req.params.id, longURL: urlDatabase[req.params.id].longURL};
     res.render("urls_show", templateVars);
@@ -140,6 +142,9 @@ app.post("/urls", (req, res) => {
     userID: req.session.user_id
   };
   res.redirect(`/urls/${shortURL}`);
+  if (!req.session.user_id) {
+    res.send("Please log in!");
+  }
 });
 
 app.post("/urls/:id", (req, res) => {
@@ -149,7 +154,7 @@ app.post("/urls/:id", (req, res) => {
       longURL: req.body.longURL,
       userID: req.session.user_id
     };
-    res.redirect("/urls");
+    res.redirect(`/urls/${req.params.id}`);
   } else {
     res.send("Sorry, you cannot edit urls that are not under your account!");
   }
